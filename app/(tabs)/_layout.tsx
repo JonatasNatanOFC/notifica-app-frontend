@@ -62,9 +62,9 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="criarNotificacao"
+        name="minhasNotificacoes"
         options={{
-          title: 'Criar Noticação',
+          title: 'Minhas notificações',
           tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
         }}
       />
