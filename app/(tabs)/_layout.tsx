@@ -54,6 +54,20 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
         }}
       />
+      <Tabs.Screen
+        name="notificacao"
+        options={{
+          title: 'Noticação',
+          tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="criarNotificacao"
+        options={{
+          title: 'Criar Noticação',
+          tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
+        }}
+      />
     </Tabs>
   );
 }
