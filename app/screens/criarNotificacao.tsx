@@ -15,6 +15,8 @@ export default function CriarNotificacao() {
   const [localizacao, setLocalizacao] = useState<ILocalizacao | null>(null);
   const [userId, setUserId] = useState<string>('');
 
+  //Carrega o ID do usuario no AsyncStorage
+  //Como ainda n existe o usuario cadastrado, estamos simulando um ID
   useEffect(() => {
     const inicializarUserId = async () => {
       const idExistente = await AsyncStorage.getItem('userId');
@@ -29,6 +31,23 @@ export default function CriarNotificacao() {
     inicializarUserId();
   }, []);
 
+  const tirarFoto = async () => {
+    const permission = await ImagePicker.requestCameraPermissionsAsync();
+    if (!permission.granted) {
+      Alert.alert('Permissão negada', 'Precisamos de acesso à câmera.');
+      return;
+    }
+
+    const result = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      quality: 0.7,
+      base64: true,
+    });
+
+    if (!result.canceled) {
+      setFotoUrl(result.assets[0].uri);
+    }
+  };
   const escolherFoto = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({ base64: true });
 
@@ -37,6 +56,7 @@ export default function CriarNotificacao() {
     }
   };
 
+  //Pegar localização do Usuario
   const pegarLocalizacao = async () => {
     const { status } = await Location.requestForegroundPermissionsAsync();
     if (status !== 'granted') {
@@ -80,6 +100,7 @@ export default function CriarNotificacao() {
     setDescricao('');
     setFotoUrl('');
     setLocalizacao(null);
+    router.replace('/(tabs)/notificacao');
   };
 
   return (
@@ -94,7 +115,17 @@ export default function CriarNotificacao() {
         onChangeText={setDescricao}
       />
 
-      <Button title="Escolher Foto" onPress={escolherFoto} />
+      <Button title="Adicionar Foto" onPress={() => {
+        Alert.alert(
+          'Foto',
+          'Como deseja adicionar a foto?',
+          [
+            { text: 'Tirar agora', onPress: tirarFoto },
+            { text: 'Escolher da galeria', onPress: escolherFoto },
+            { text: 'Cancelar', style: 'cancel' },
+          ]
+        );
+      }} />
       {fotoUrl !== '' && <Image source={{ uri: fotoUrl }} style={styles.imagem} />}
 
       <Button title="Usar Localização Atual" onPress={pegarLocalizacao} />

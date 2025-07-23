@@ -8,7 +8,7 @@ import CreateNotificacaoBtn from '@/components/button/CreateNoticacaoBtn';
 export default function Notificacao() {
 
     const handleNavigationCriarNotificacao = () =>{
-        router.push("/screens/criarNotificacao")
+        router.push("../screens/criarNotificacao")
     }
 
   return (
