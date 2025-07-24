@@ -70,7 +70,9 @@ export default function CriarNotificacao() {
     setLocalizacao({
       latitude: location.coords.latitude,
       longitude: location.coords.longitude,
-      cidade: reverse[0].city || 'Desconhecida',
+      cidade: reverse[0].city || reverse[0].subregion,
+      bairro: reverse[0].district,
+      rua: reverse[0].street
     });
   };
 

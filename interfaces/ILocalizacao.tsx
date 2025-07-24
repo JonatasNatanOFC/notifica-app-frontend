@@ -1,7 +1,7 @@
 export interface ILocalizacao {
   latitude: number;
   longitude: number;
-  cidade: string;
-  bairro?: string;
-  rua?: string;
+  cidade: string | null;
+  bairro: string | null;
+  rua: string | null;
 }

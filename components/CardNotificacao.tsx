@@ -3,6 +3,7 @@ import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 
 import { FontAwesome, MaterialIcons } from '@expo/vector-icons'
 import { INotificacao } from '@/interfaces/INotificacao'
+import { ILocalizacao } from '@/interfaces/ILocalizacao'
 
 type cardProps = {
   notificacao: INotificacao
@@ -29,16 +30,25 @@ export const statusColors: StatusColorProps = {
 }
 
 export function formatarData(dataEnvio: string): string {
-  const data = new Date(dataEnvio);
+  const data = new Date(dataEnvio)
 
-  const dia = String(data.getDate()).padStart(2, '0');
-  const mes = String(data.getMonth() + 1).padStart(2, '0');
-  const ano = data.getFullYear();
+  const dia = String(data.getDate()).padStart(2, '0')
+  const mes = String(data.getMonth() + 1).padStart(2, '0')
+  const ano = data.getFullYear()
 
-  const horas = String(data.getHours()).padStart(2, '0');
-  const minutos = String(data.getMinutes()).padStart(2, '0');
+  const horas = String(data.getHours()).padStart(2, '0')
+  const minutos = String(data.getMinutes()).padStart(2, '0')
 
-  return `${dia}/${mes}/${ano} às ${horas}:${minutos}`;
+  return `${dia}/${mes}/${ano} às ${horas}:${minutos}`
+}
+
+export function formatarLocalizacao(localizacao: ILocalizacao): string {
+  var local = ''
+  if (localizacao.rua) {local = localizacao.rua}
+  if (localizacao.bairro) {local = local + `, ${localizacao.bairro}`}
+  if (localizacao.cidade) {local = local + ` - ${localizacao.cidade}`}
+
+  return local
 }
 
 export default function NotificationCard({notificacao, exibirBotoesGerenciamento, abrirNoMapa}: cardProps) {
@@ -51,7 +61,7 @@ export default function NotificationCard({notificacao, exibirBotoesGerenciamento
     <View style={styles.card}>
       <View style={styles.header}>
         <FontAwesome name="map-marker" size={20} color="#ff5733" />
-        <Text style={styles.location}>{notificacao.localizacao.cidade}</Text>
+        <Text style={styles.location}>{formatarLocalizacao(notificacao.localizacao)}</Text>
       </View>
 
       <Text style={styles.date}>Enviado em: {formatarData(notificacao.dataEnvio)}</Text>
