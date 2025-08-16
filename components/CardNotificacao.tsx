@@ -1,14 +1,18 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 
 import { FontAwesome, MaterialIcons } from '@expo/vector-icons'
 import { INotificacao } from '@/interfaces/INotificacao'
 import { ILocalizacao } from '@/interfaces/ILocalizacao'
 
+import ModalConfirmacao from './hooks/ModalConfirmacao'
+
 type cardProps = {
   notificacao: INotificacao
   exibirBotoesGerenciamento: boolean
   abrirNoMapa: (latitude: number, longitude: number) => void
+  id?: number
+  onDelete?: (id: number) => void
 }
 
 export type StatusColorProps = {
@@ -51,10 +55,17 @@ export function formatarLocalizacao(localizacao: ILocalizacao): string {
   return local
 }
 
-export default function NotificationCard({notificacao, exibirBotoesGerenciamento, abrirNoMapa}: cardProps) {
+export default function NotificationCard({notificacao, exibirBotoesGerenciamento, abrirNoMapa, id, onDelete}: cardProps) {
   const colors = statusColors[notificacao.status.toLocaleLowerCase()] || {
     backgroundColor: '#eee',
     textColor: '#333',
+  }
+  const [modalVisible, setModalVisible] = useState(false)
+  
+  const handleDelete = () => {
+    if (id && onDelete){
+      onDelete(id)
+    }
   }
 
   return (
@@ -87,6 +98,15 @@ export default function NotificationCard({notificacao, exibirBotoesGerenciamento
           <Text style={styles.actionText}>Ver no mapa</Text>
         </TouchableOpacity>
 
+        {!exibirBotoesGerenciamento &&
+          <TouchableOpacity style={styles.actionButton} 
+          onPress={() => setModalVisible(true)}
+          >
+            <MaterialIcons name="delete" size={18} color="#444" />
+            <Text style={styles.actionText}>Excluir</Text>
+          </TouchableOpacity>
+        }
+
         {exibirBotoesGerenciamento &&
           <>
             <TouchableOpacity style={styles.actionButton}>
@@ -99,7 +119,17 @@ export default function NotificationCard({notificacao, exibirBotoesGerenciamento
               <Text style={styles.actionText}>Marcar como {'\n'}resolvido</Text>
             </TouchableOpacity>
           </>  
-      }
+        }
+
+        <ModalConfirmacao
+          visible={modalVisible}
+          message="Deseja excluir está denúncia?"
+          onConfirm={() => {
+            handleDelete();
+            setModalVisible(false);
+          }}
+          onCancel={() => setModalVisible(false)}
+        />
       </View>
     </View>
   )

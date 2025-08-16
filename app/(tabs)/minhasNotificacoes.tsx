@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   ScrollView, Text, StyleSheet, ActivityIndicator
 } from 'react-native';
@@ -9,34 +9,42 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { INotificacao } from '../../interfaces/INotificacao';
 import CardNotificacao from '@/components/CardNotificacao';
 
+import ApagarNotificacao from '@/components/hooks/ApagarNotificacao';
+import { useFocusEffect } from '@react-navigation/native';
+
 export default function MinhasNotificacoes() {
   const [notificacoes, setNotificacoes] = useState<INotificacao[]>([]);
   const [carregando, setCarregando] = useState(true);
 
-  useEffect(() => {
-    const carregarNotificacoes = async () => {
-      try {
-        const userId = await AsyncStorage.getItem('userId');
-        if (!userId) return;
-
-        const dados = await AsyncStorage.getItem(`notificacoes_${userId}`);
-        const lista: INotificacao[] = dados ? JSON.parse(dados) : [];
-
-        setNotificacoes(lista.reverse()); // mais recentes primeiro
-      } catch (error) {
-        console.error('Erro ao carregar notificações:', error);
-      } finally {
-        setCarregando(false);
-      }
-    };
-
-    carregarNotificacoes();
-  }, []);
-
+  useFocusEffect(
+    useCallback(() => {
+      async function carregarNotificacoes() {
+        try {
+          const userId = await AsyncStorage.getItem('userId');
+          if (!userId) return;
+          const dados = await AsyncStorage.getItem(`notificacoes_${userId}`);
+          const lista: INotificacao[] = dados ? JSON.parse(dados) : [];
+  
+          setNotificacoes(lista.reverse()); // mais recentes primeiro
+        } catch (error) {
+          console.error('Erro ao carregar notificações:', error);
+        } finally {
+          setCarregando(false);
+        }
+      };
+      carregarNotificacoes();
+    },[notificacoes])
+  )
   const abrirNoMapa = (latitude: number, longitude: number) => {
     const url = `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`;
     Linking.openURL(url);
   };
+
+  const onDelete = async (id:number) => {
+    const userId = await AsyncStorage.getItem('userId');
+    if (!userId) return;
+    await ApagarNotificacao(id, notificacoes, `notificacoes_${userId}`);
+  }
 
   return (
     <ScrollView style={styles.container}>
@@ -48,6 +56,8 @@ export default function MinhasNotificacoes() {
           notificacao={not}
           exibirBotoesGerenciamento={false}
           abrirNoMapa={abrirNoMapa}
+          id={Number(not.id)}
+          onDelete={onDelete}
         />
       ))
       : <Text style={styles.noNots}>Nenhuma notificação enviada ainda.</Text> }
