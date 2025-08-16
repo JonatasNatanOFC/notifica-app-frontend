@@ -51,14 +51,12 @@ export default function MinhasNotificacoes() {
       ) : notificacoes.length > 0 ? (
         notificacoes.map((not) => (
           <CardNotificacao
-            key={not.id}
-            notificacao={not}
-            exibirBotoesGerenciamento={false}
-            abrirNoMapa={abrirNoMapa}
-            onMarcarResolvido={function (id: string): void {
-              throw new Error("Function not implemented.");
-            }}
-          />
+  key={not.id}
+  notificacao={not}
+  exibirBotoesGerenciamento={true}
+  abrirNoMapa={abrirNoMapa}
+/>
+
         ))
       ) : (
         <Text style={styles.noNots}>Nenhuma notificação enviada ainda.</Text>

@@ -6,6 +6,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import { INotificacao } from "../../interfaces/INotificacao";
 import CardNotificacao from "@/components/CardNotificacao";
+import { router } from "expo-router";
 
 export default function notificacaoPrefeitura() {
   const [cidade, setCidade] = useState("");
@@ -72,6 +73,11 @@ export default function notificacaoPrefeitura() {
     Linking.openURL(url);
   };
 
+  const responderNotificacao = (notificacaoId: string) => {
+    router.push(`/screens/responderNotificacao?id=${notificacaoId}`);
+  };
+
+
   return (
     <ScrollView style={styles.container}>
       {carregando ? (
@@ -85,6 +91,8 @@ export default function notificacaoPrefeitura() {
             abrirNoMapa={abrirNoMapa}
             // --- ALTERAÇÃO 2: Passando a função como prop para o card ---
             onMarcarResolvido={marcarComoResolvido}
+            onResponder={() => responderNotificacao(not.id)}
+            
           />
         ))
       ) : (

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
@@ -10,7 +10,8 @@ type cardProps = {
   exibirBotoesGerenciamento: boolean;
   abrirNoMapa: (latitude: number, longitude: number) => void;
   // --- ALTERAÇÃO 1: Adicionando a nova prop na tipagem ---
-  onMarcarResolvido: (id: string) => void;
+  onMarcarResolvido?: (id: string) => void;
+  onResponder?: () => void;
 };
 
 export type StatusColorProps = {
@@ -65,11 +66,15 @@ export default function NotificationCard({
   abrirNoMapa,
   // --- ALTERAÇÃO 2: Recebendo a nova prop ---
   onMarcarResolvido,
+  onResponder
 }: cardProps) {
   const colors = statusColors[notificacao.status.toLocaleLowerCase()] || {
     backgroundColor: "#eee",
     textColor: "#333",
   };
+
+  const [mostrarDetalhes, setMostrarDetalhes] = useState(false);
+
 
   return (
     <View style={styles.card}>
@@ -122,22 +127,47 @@ export default function NotificationCard({
 
         {exibirBotoesGerenciamento && (
           <>
-            <TouchableOpacity style={styles.actionButton}>
-              <MaterialIcons name="reply" size={18} color="#444" />
-              <Text style={styles.actionText}>Responder</Text>
-            </TouchableOpacity>
+            {onResponder && !notificacao.respostaPrefeitura && (
+              <TouchableOpacity style={styles.actionButton} onPress={onResponder}>
+                <MaterialIcons name="reply" size={18} color="#444" />
+                <Text style={styles.actionText}>Responder</Text>
+              </TouchableOpacity>
+            )}
 
+            {notificacao.respostaPrefeitura && (
+              <TouchableOpacity
+                style={styles.actionButton}
+                onPress={() => setMostrarDetalhes((prev) => !prev)}
+              >
+                <MaterialIcons name="info" size={18} color="#444" />
+                <Text style={styles.actionText}>
+                  {mostrarDetalhes ? "Ocultar detalhes" : "Ver detalhes"}
+                </Text>
+              </TouchableOpacity>
+            )}
+
+            
             {/* --- ALTERAÇÃO 3: Adicionando o onPress para chamar a função --- */}
-            <TouchableOpacity
-              style={styles.actionButton}
-              onPress={() => onMarcarResolvido(notificacao.id)}
-            >
-              <MaterialIcons name="check" size={18} color="#444" />
-              <Text style={styles.actionText}>Marcar como {"\n"}resolvido</Text>
-            </TouchableOpacity>
+            {onMarcarResolvido && (
+              <TouchableOpacity
+                style={styles.actionButton}
+                onPress={() => onMarcarResolvido(notificacao.id)}
+              >
+                <MaterialIcons name="check" size={18} color="#444" />
+                <Text style={styles.actionText}>Marcar como {"\n"}resolvido</Text>
+              </TouchableOpacity>
+            )}
+
           </>
         )}
       </View>
+      {mostrarDetalhes && notificacao.respostaPrefeitura && (
+        <View style={styles.respostaContainer}>
+          <Text style={styles.respostaTitulo}>Resposta da Prefeitura:</Text>
+          <Text style={styles.respostaTexto}>{notificacao.respostaPrefeitura}</Text>
+        </View>
+      )}
+
     </View>
   );
 }
@@ -224,4 +254,23 @@ const styles = StyleSheet.create({
     color: "#444",
     fontSize: 13,
   },
+  respostaContainer: {
+    marginTop: 12,
+    backgroundColor: "#f5f5f5",
+    padding: 10,
+    borderRadius: 8,
+    borderColor: "#ccc",
+    borderWidth: 1,
+  },
+  respostaTitulo: {
+    fontWeight: "bold",
+    fontSize: 14,
+    marginBottom: 4,
+    color: "#444",
+  },
+  respostaTexto: {
+    fontSize: 13,
+    color: "#333",
+  },
+
 });
