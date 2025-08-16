@@ -47,8 +47,9 @@ export default function MinhasNotificacoes() {
           key={not.id}
           notificacao={not}
           exibirBotoesGerenciamento={false}
-          abrirNoMapa={abrirNoMapa}
-        />
+          abrirNoMapa={abrirNoMapa} onMarcarResolvido={function (id: string): void {
+            throw new Error('Function not implemented.');
+          } }        />
       ))
       : <Text style={styles.noNots}>Nenhuma notificação enviada ainda.</Text> }
     </ScrollView>
