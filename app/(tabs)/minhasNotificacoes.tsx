@@ -1,16 +1,14 @@
-import React, { useCallback, useState } from 'react';
-import {
-  ScrollView, Text, StyleSheet, ActivityIndicator
-} from 'react-native';
-import { Linking } from 'react-native';
+import React, { useCallback, useState } from "react";
+import { ScrollView, Text, StyleSheet, ActivityIndicator } from "react-native";
+import { Linking } from "react-native";
 
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-import { INotificacao } from '../../interfaces/INotificacao';
-import CardNotificacao from '@/components/CardNotificacao';
+import { INotificacao } from "../../interfaces/INotificacao";
+import CardNotificacao from "@/components/CardNotificacao";
 
-import ApagarNotificacao from '@/components/hooks/ApagarNotificacao';
-import { useFocusEffect } from '@react-navigation/native';
+import ApagarNotificacao from "@/components/hooks/ApagarNotificacao";
+import { useFocusEffect } from "@react-navigation/native";
 
 export default function MinhasNotificacoes() {
   const [notificacoes, setNotificacoes] = useState<INotificacao[]>([]);
@@ -20,60 +18,61 @@ export default function MinhasNotificacoes() {
     useCallback(() => {
       async function carregarNotificacoes() {
         try {
-          const userId = await AsyncStorage.getItem('userId');
+          const userId = await AsyncStorage.getItem("userId");
           if (!userId) return;
           const dados = await AsyncStorage.getItem(`notificacoes_${userId}`);
           const lista: INotificacao[] = dados ? JSON.parse(dados) : [];
-  
-          setNotificacoes(lista.reverse()); // mais recentes primeiro
+
+          setNotificacoes(lista.reverse());
         } catch (error) {
-          console.error('Erro ao carregar notificações:', error);
+          console.error("Erro ao carregar notificações:", error);
         } finally {
           setCarregando(false);
         }
-      };
+      }
       carregarNotificacoes();
-    },[notificacoes])
-  )
+    }, [notificacoes])
+  );
   const abrirNoMapa = (latitude: number, longitude: number) => {
     const url = `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`;
     Linking.openURL(url);
   };
 
-  const onDelete = async (id:number) => {
-    const userId = await AsyncStorage.getItem('userId');
+  const onDelete = async (id: number) => {
+    const userId = await AsyncStorage.getItem("userId");
     if (!userId) return;
     await ApagarNotificacao(id, notificacoes, `notificacoes_${userId}`);
-  }
+  };
 
   return (
     <ScrollView style={styles.container}>
       {carregando ? (
         <ActivityIndicator size="large" color="#000" />
-      ) : notificacoes.length > 0 ? notificacoes.map(not => (
-        <CardNotificacao
-          key={not.id}
-          notificacao={not}
-          exibirBotoesGerenciamento={false}
-          abrirNoMapa={abrirNoMapa}
-          id={Number(not.id)}
-          onDelete={onDelete}
-        />
-      ))
-      : <Text style={styles.noNots}>Nenhuma notificação enviada ainda.</Text> }
+      ) : notificacoes.length > 0 ? (
+        notificacoes.map((not) => (
+          <CardNotificacao
+            key={not.id}
+            notificacao={not}
+            exibirBotoesGerenciamento={false}
+            abrirNoMapa={abrirNoMapa}
+            onMarcarResolvido={function (id: string): void {
+              throw new Error("Function not implemented.");
+            }}
+          />
+        ))
+      ) : (
+        <Text style={styles.noNots}>Nenhuma notificação enviada ainda.</Text>
+      )}
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: 
-    { flex: 1,
-      backgroundColor: '#fff'
-    },
+  container: { flex: 1, backgroundColor: "#fff" },
   noNots: {
     paddingVertical: 30,
-    textAlign: 'center',
+    textAlign: "center",
     fontSize: 28,
-    fontWeight: 'bold'
+    fontWeight: "bold",
   },
 });
