@@ -51,12 +51,13 @@ export default function MinhasNotificacoes() {
       ) : notificacoes.length > 0 ? (
         notificacoes.map((not) => (
           <CardNotificacao
-  key={not.id}
-  notificacao={not}
-  exibirBotoesGerenciamento={true}
-  abrirNoMapa={abrirNoMapa}
-/>
-
+            key={not.id}
+            notificacao={not}
+            exibirBotoesGerenciamento={false}
+            abrirNoMapa={abrirNoMapa}
+            id={Number(not.id)}
+            onDelete={onDelete}
+          />
         ))
       ) : (
         <Text style={styles.noNots}>Nenhuma notificação enviada ainda.</Text>

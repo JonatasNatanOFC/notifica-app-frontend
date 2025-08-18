@@ -4,12 +4,14 @@ import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
 import { INotificacao } from "@/interfaces/INotificacao";
 import { ILocalizacao } from "@/interfaces/ILocalizacao";
+import ModalConfirmacao from "./hooks/ModalConfirmacao";
 
 type cardProps = {
   notificacao: INotificacao;
   exibirBotoesGerenciamento: boolean;
   abrirNoMapa: (latitude: number, longitude: number) => void;
-  // --- ALTERAÇÃO 1: Adicionando a nova prop na tipagem ---
+  id?: number;
+  onDelete?: (id: number) => void;
   onMarcarResolvido?: (id: string) => void;
   onResponder?: () => void;
 };
@@ -64,17 +66,23 @@ export default function NotificationCard({
   notificacao,
   exibirBotoesGerenciamento,
   abrirNoMapa,
-  // --- ALTERAÇÃO 2: Recebendo a nova prop ---
+  id,
+  onDelete,
   onMarcarResolvido,
-  onResponder
+  onResponder,
 }: cardProps) {
   const colors = statusColors[notificacao.status.toLocaleLowerCase()] || {
     backgroundColor: "#eee",
     textColor: "#333",
   };
-
+  const [modalVisible, setModalVisible] = useState(false);
   const [mostrarDetalhes, setMostrarDetalhes] = useState(false);
 
+  const handleDelete = () => {
+    if (id && onDelete) {
+      onDelete(id);
+    }
+  };
 
   return (
     <View style={styles.card}>
@@ -124,11 +132,19 @@ export default function NotificationCard({
           <MaterialIcons name="map" size={18} color="#444" />
           <Text style={styles.actionText}>Ver no mapa</Text>
         </TouchableOpacity>
-
+        {!exibirBotoesGerenciamento && (
+          <TouchableOpacity style={styles.actionButton} onPress={() => setModalVisible(true)}>
+            <MaterialIcons name="delete" size={18} color="#f00" />
+            <Text style={styles.actionText}>Excluir</Text>
+          </TouchableOpacity>
+        )}
         {exibirBotoesGerenciamento && (
           <>
             {onResponder && !notificacao.respostaPrefeitura && (
-              <TouchableOpacity style={styles.actionButton} onPress={onResponder}>
+              <TouchableOpacity
+                style={styles.actionButton}
+                onPress={onResponder}
+              >
                 <MaterialIcons name="reply" size={18} color="#444" />
                 <Text style={styles.actionText}>Responder</Text>
               </TouchableOpacity>
@@ -146,28 +162,39 @@ export default function NotificationCard({
               </TouchableOpacity>
             )}
 
-            
-            {/* --- ALTERAÇÃO 3: Adicionando o onPress para chamar a função --- */}
             {onMarcarResolvido && (
               <TouchableOpacity
                 style={styles.actionButton}
                 onPress={() => onMarcarResolvido(notificacao.id)}
               >
                 <MaterialIcons name="check" size={18} color="#444" />
-                <Text style={styles.actionText}>Marcar como {"\n"}resolvido</Text>
+                <Text style={styles.actionText}>
+                  Marcar como {"\n"}resolvido
+                </Text>
               </TouchableOpacity>
             )}
-
           </>
         )}
       </View>
+
+      <ModalConfirmacao
+        visible={modalVisible}
+        message="Deseja excluir está denúncia?"
+        onConfirm={() => {
+          handleDelete();
+          setModalVisible(false);
+        }}
+        onCancel={() => setModalVisible(false)}
+      />
+
       {mostrarDetalhes && notificacao.respostaPrefeitura && (
         <View style={styles.respostaContainer}>
           <Text style={styles.respostaTitulo}>Resposta da Prefeitura:</Text>
-          <Text style={styles.respostaTexto}>{notificacao.respostaPrefeitura}</Text>
+          <Text style={styles.respostaTexto}>
+            {notificacao.respostaPrefeitura}
+          </Text>
         </View>
       )}
-
     </View>
   );
 }
@@ -272,5 +299,4 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: "#333",
   },
-
 });
