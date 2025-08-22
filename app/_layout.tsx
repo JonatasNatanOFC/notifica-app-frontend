@@ -1,12 +1,13 @@
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
+import { Stack, Redirect } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
+import { useEffect, useContext } from 'react';
 import 'react-native-reanimated';
 
 import { useColorScheme } from '@/components/useColorScheme';
+import AuthProvider, { AuthContext } from '../context/AuthContext';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -14,11 +15,10 @@ export {
 } from 'expo-router';
 
 export const unstable_settings = {
-  // Ensure that reloading on `/modal` keeps a back button present.
-  initialRouteName: '(tabs)',
+  initialRouteName: 'index', // app/index.tsx será a raiz
 };
 
-// Prevent the splash screen from auto-hiding before asset loading is complete.
+// Evita esconder a splash antes de carregar
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
@@ -27,7 +27,6 @@ export default function RootLayout() {
     ...FontAwesome.font,
   });
 
-  // Expo Router uses Error Boundaries to catch errors in the navigation tree.
   useEffect(() => {
     if (error) throw error;
   }, [error]);
@@ -38,21 +37,35 @@ export default function RootLayout() {
     }
   }, [loaded]);
 
-  if (!loaded) {
-    return null;
-  }
+  if (!loaded) return null;
 
-  return <RootLayoutNav />;
+  return (
+    <AuthProvider>
+      <RootLayoutNav />
+    </AuthProvider>
+  );
 }
 
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
+  const { user } = useContext(AuthContext);
 
+  // 🔹 Redireciona de acordo com login
+  if (user?.role === 'USER') {
+    return <Redirect href="/(user)/minhasNotificacoes" />;
+  }
+
+  if (user?.role === 'PREFECTURE') {
+    return <Redirect href="/(prefeitura)/notificacaoPrefeitura" />;
+  }
+
+  // 🔹 Caso não esteja logado → libera telas públicas
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="home" />   {/* Home inicial */}
+        <Stack.Screen name="login" />
+        <Stack.Screen name="register" />
       </Stack>
     </ThemeProvider>
   );
