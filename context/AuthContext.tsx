@@ -43,7 +43,10 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
   }, []);
 
   const login = async (values: { email: string; password: string }) => {
-    const response = await axios.post("http://localhost:8080/auth/login", values);
+    const response = await axios.post(
+      "http://10.10.187.67:8080/auth/login",
+      values
+    );
     if (response.status === 200) {
       const { token, user } = response.data;
       setToken(token);
@@ -62,7 +65,7 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
   };
 
   const register = async (values: { username: string; email: string; password: string; city: string }) => {
-    await axios.post("http://localhost:8080/auth/register/user", values);
+    await axios.post("http://10.10.187.67:8080/auth/register/user", values);
     // depois de registrar pode logar automaticamente ou mandar pra tela de login
     router.push("../login");
   };
