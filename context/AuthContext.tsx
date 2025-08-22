@@ -72,7 +72,7 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
     setUserData(null);
     await AsyncStorage.removeItem("token");
     await AsyncStorage.removeItem("user");
-    router.replace("../screens/home");
+    router.replace("/home");
   };
 
   return (
