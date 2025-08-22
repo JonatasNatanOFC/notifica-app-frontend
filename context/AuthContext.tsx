@@ -28,6 +28,7 @@ export default function AuthProvider({
   const [userData, setUserData] = useState<any>(null);
   const [token, setToken] = useState<string | null>(null);
   const router = useRouter();
+  const IPs = ['localhost', '10.10.187.67', '192.168.0.131']
 
   useEffect(() => {
     const loadUser = async () => {
@@ -53,7 +54,7 @@ export default function AuthProvider({
   const login = async (values: { email: string; password: string }) => {
     try {
       const response = await axios.post(
-        "http://localhost:8080/auth/login",
+        `http://${IPs[2]}:8080/auth/login`,
         values
       );
       const { token, user } = response.data;
@@ -80,7 +81,7 @@ export default function AuthProvider({
     city: string;
   }) => {
     try {
-      await axios.post("http://localhost:8080/auth/register/user", values);
+      await axios.post(`http://${IPs[2]}:8080/auth/register/user`, values);
       router.push("../login");
     } catch (error) {
       throw error;
