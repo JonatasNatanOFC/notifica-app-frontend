@@ -1,4 +1,3 @@
-// screens/Home.tsx
 import {
   View,
   Text,
@@ -50,7 +49,6 @@ export default function Home() {
           </View>
         </View>
 
-        {/* Conteúdo Principal */}
         <View>
           <Text style={styles.title}>A sua voz para uma cidade melhor.</Text>
           <Text style={styles.description}>
@@ -59,21 +57,18 @@ export default function Home() {
             solução.
           </Text>
 
-          {/* Container para a sobreposição da imagem e do card */}
           <View style={styles.promoContainer}>
             <Image
               source={require("../assets/images/imagemLandingPage.png")}
               style={styles.imgPerson}
             />
 
-            {/* A View "howToUse" com margem negativa para sobrepor */}
             <View style={styles.howToUse}>
               <Text style={styles.titleHow}>Como funciona?</Text>
               <Text style={styles.descriptionHow}>
                 Em 3 passos simples você faz a diferença.
               </Text>
 
-              {/* Renderização dinâmica dos passos a partir do array */}
               {stepsData.map((step, index) => (
                 <StepItem
                   key={index}
@@ -85,6 +80,16 @@ export default function Home() {
             </View>
           </View>
         </View>
+        <Text
+          style={{
+            textAlign: "center",
+            marginTop: 20,
+            color: "#4F4F4F",
+            fontSize: 12,
+          }}
+        >
+          © 2025 Notifica App
+        </Text>
       </ScrollView>
     </SafeAreaView>
   );
