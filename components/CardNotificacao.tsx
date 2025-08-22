@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Image, StyleSheet, Text, TouchableOpacity, View, Modal, Pressable } from "react-native";
 
 import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
 import { INotificacao } from "@/interfaces/INotificacao";
@@ -12,7 +12,7 @@ type cardProps = {
   abrirNoMapa: (latitude: number, longitude: number) => void;
   id?: number;
   onDelete?: (id: number) => void;
-  onMarcarResolvido?: (id: string) => void;
+  onAtualizarStatus?: (id: string, novoStatus: 'pendente' | 'resolvido' | 'análise') => void;
   onResponder?: () => void;
 };
 
@@ -32,6 +32,10 @@ export const statusColors: StatusColorProps = {
     backgroundColor: "#e0f2e9",
     textColor: "#388e3c",
   },
+  análise: {
+    backgroundColor: "#e0e0ff",
+    textColor: "#303f9f",
+  }
 };
 
 export function formatarData(dataEnvio: string): string {
@@ -68,7 +72,7 @@ export default function NotificationCard({
   abrirNoMapa,
   id,
   onDelete,
-  onMarcarResolvido,
+  onAtualizarStatus,
   onResponder,
 }: cardProps) {
   const colors = statusColors[notificacao.status.toLocaleLowerCase()] || {
@@ -77,11 +81,17 @@ export default function NotificationCard({
   };
   const [modalVisible, setModalVisible] = useState(false);
   const [mostrarDetalhes, setMostrarDetalhes] = useState(false);
+  const [statusMenuVisible, setStatusMenuVisible] = useState(false);
 
   const handleDelete = () => {
     if (id && onDelete) {
       onDelete(id);
     }
+  };
+
+  const alterarStatus = (novoStatus: 'pendente' | 'resolvido' | 'análise') => {
+    if (onAtualizarStatus) onAtualizarStatus(notificacao.id, novoStatus);
+    setStatusMenuVisible(false);
   };
 
   return (
@@ -162,20 +172,39 @@ export default function NotificationCard({
               </TouchableOpacity>
             )}
 
-            {onMarcarResolvido && (
+            {onAtualizarStatus && (
               <TouchableOpacity
                 style={styles.actionButton}
-                onPress={() => onMarcarResolvido(notificacao.id)}
+                onPress={() => setStatusMenuVisible(true)}
               >
-                <MaterialIcons name="check" size={18} color="#444" />
-                <Text style={styles.actionText}>
-                  Marcar como {"\n"}resolvido
-                </Text>
+                <MaterialIcons name="edit" size={18} color="#444" />
+                <Text style={styles.actionText}>Alterar status</Text>
               </TouchableOpacity>
             )}
           </>
         )}
       </View>
+
+      <Modal
+        transparent
+        visible={statusMenuVisible}
+        animationType="fade"
+        onRequestClose={() => setStatusMenuVisible(false)}
+      >
+        <Pressable style={styles.modalOverlay} onPress={() => setStatusMenuVisible(false)}>
+          <View style={styles.modalContent}>
+            {['pendente', 'análise', 'resolvido'].map((status) => (
+              <TouchableOpacity
+                key={status}
+                style={styles.modalButton}
+                onPress={() => alterarStatus(status as 'pendente' | 'resolvido' | 'análise')}
+              >
+                <Text style={styles.modalButtonText}>{status.toUpperCase()}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </Pressable>
+      </Modal>
 
       <ModalConfirmacao
         visible={modalVisible}
@@ -299,4 +328,8 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: "#333",
   },
+  modalOverlay: { flex:1, backgroundColor:'rgba(0,0,0,0.3)', justifyContent:'center', alignItems:'center' },
+  modalContent: { backgroundColor:'#fff', borderRadius:10, padding:20, width:200 },
+  modalButton: { paddingVertical:10, borderBottomWidth:1, borderBottomColor:'#ddd' },
+  modalButtonText: { fontSize:16, textAlign:'center', color:'#333' }
 });

@@ -1,11 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { ScrollView, Text, StyleSheet, ActivityIndicator } from "react-native";
-import { Linking } from "react-native";
-
+import { ScrollView, Text, StyleSheet, ActivityIndicator, Linking } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import { INotificacao } from "../../interfaces/INotificacao";
-import CardNotificacao from "@/components/CardNotificacao";
+import NotificationCard from "@/components/CardNotificacao";
 import { router } from "expo-router";
 
 export default function notificacaoPrefeitura() {
@@ -16,8 +14,7 @@ export default function notificacaoPrefeitura() {
   const notificacoesFiltradas = notificacoes.filter(
     (not) =>
       cidade === "" ||
-      (not.localizacao?.cidade &&
-        not.localizacao.cidade.toLowerCase().includes(cidade.toLowerCase()))
+      (not.localizacao?.cidade && not.localizacao.cidade.toLowerCase().includes(cidade.toLowerCase()))
   );
 
   useEffect(() => {
@@ -40,31 +37,22 @@ export default function notificacaoPrefeitura() {
     carregarNotificacoes();
   }, []);
 
-  // --- ALTERAÇÃO 1: Função para lidar com a mudança de status ---
-  const marcarComoResolvido = async (notificacaoId: string) => {
+  const atualizarStatus = async (notificacaoId: string, novoStatus: 'pendente' | 'resolvido' | 'análise') => {
     try {
-      const notificacoesAtualizadas = notificacoes.map((not) => {
-        if (not.id === notificacaoId) {
-          // Retorna um novo objeto com o status alterado
-          // A correção do TypeScript foi aplicada aqui com "as 'resolvido'"
-          return { ...not, status: "resolvido" as "resolvido" };
-        }
-        return not; // Retorna a notificação sem alterações
-      });
-
+      const notificacoesAtualizadas = notificacoes.map((not) =>
+        not.id === notificacaoId ? { ...not, status: novoStatus } : not
+      );
       setNotificacoes(notificacoesAtualizadas);
 
-      // Salva a lista atualizada de volta no AsyncStorage
       const userId = await AsyncStorage.getItem("userId");
       if (userId) {
-        // Revertemos a ordem novamente para salvar no formato original no storage
         await AsyncStorage.setItem(
           `notificacoes_${userId}`,
           JSON.stringify(notificacoesAtualizadas.reverse())
         );
       }
     } catch (error) {
-      console.error("Erro ao marcar como resolvido:", error);
+      console.error("Erro ao atualizar status:", error);
     }
   };
 
@@ -77,22 +65,19 @@ export default function notificacaoPrefeitura() {
     router.push(`/screens/responderNotificacao?id=${notificacaoId}`);
   };
 
-
   return (
     <ScrollView style={styles.container}>
       {carregando ? (
         <ActivityIndicator size="large" color="#000" />
       ) : notificacoes.length > 0 ? (
         notificacoesFiltradas.map((not) => (
-          <CardNotificacao
+          <NotificationCard
             key={not.id}
             notificacao={not}
             exibirBotoesGerenciamento={true}
             abrirNoMapa={abrirNoMapa}
-            // --- ALTERAÇÃO 2: Passando a função como prop para o card ---
-            onMarcarResolvido={marcarComoResolvido}
+            onAtualizarStatus={atualizarStatus}
             onResponder={() => responderNotificacao(not.id)}
-            
           />
         ))
       ) : (
@@ -104,10 +89,5 @@ export default function notificacaoPrefeitura() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#fff" },
-  noNots: {
-    paddingVertical: 30,
-    textAlign: "center",
-    fontSize: 28,
-    fontWeight: "bold",
-  },
+  noNots: { paddingVertical: 30, textAlign: "center", fontSize: 28, fontWeight: "bold" },
 });
