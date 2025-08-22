@@ -2,6 +2,7 @@ import React from 'react';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Link, Tabs } from 'expo-router';
 import { Pressable } from 'react-native';
+import Drawer from 'expo-router/drawer';
 
 import Colors from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
@@ -19,34 +20,35 @@ export default function TabLayout() {
   const colorScheme = useColorScheme();
 
   return (
-    <Tabs
+    <Drawer
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        // Disable the static render of the header on web
-        // to prevent a hydration error in React Navigation v6.
-        headerShown: useClientOnlyValue(false, true),
-      }}>
-      <Tabs.Screen
+      headerTintColor: '#333',
+      drawerActiveTintColor: '#007bff',
+      drawerLabelStyle: {
+        marginLeft: 20,
+      },
+    }}>
+      <Drawer.Screen
         name="notificacao"
         options={{
           title: 'Noticação',
-          tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
+          drawerIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
         }}
       />
-      <Tabs.Screen
+      <Drawer.Screen
         name="minhasNotificacoes"
         options={{
           title: 'Minhas notificações',
-          tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
+          drawerIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
         }}
       />
-      <Tabs.Screen
+      <Drawer.Screen
         name="notificacaoPrefeitura"
         options={{
           title: 'Notificações Prefeitura',
-          tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
+          drawerIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
         }}
       />
-    </Tabs>
+    </Drawer>
   );
 }

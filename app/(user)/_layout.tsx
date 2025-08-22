@@ -2,13 +2,14 @@ import { Tabs } from "expo-router";
 import { useContext } from "react";
 import { AuthContext } from "../../context/AuthContext";
 import { Button } from "react-native";
+import { Drawer } from "expo-router/drawer";
 
 export default function UserTabs() {
   const { logout } = useContext(AuthContext);
 
   return (
-    <Tabs>
-      <Tabs.Screen
+    <Drawer>
+      <Drawer.Screen
         name="notificacao"
         options={{
           title: "Criar notificação",
@@ -17,7 +18,7 @@ export default function UserTabs() {
           ),
         }}
       />
-      <Tabs.Screen
+      <Drawer.Screen
         name="minhasNotificacoes"
         options={{
           title: "Notificações",
@@ -26,6 +27,6 @@ export default function UserTabs() {
           ),
         }}
       />
-    </Tabs>
+    </Drawer>
   );
 }
