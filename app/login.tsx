@@ -19,6 +19,26 @@ export default function Login() {
   const { login } = useContext(AuthContext);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+
+  // A função é assíncrona para poder usar "await"
+  const handleLogin = async () => {
+    setError(""); // Limpa qualquer erro anterior
+
+    // Validação de campos vazios (lógica do front-end)
+    if (email.trim() === "" || password === "") {
+      setError("Por favor, preencha todos os campos.");
+      return;
+    }
+
+    // NOVO: Bloco try...catch para tratar o erro vindo do AuthContext
+    try {
+      await login({ email, password });
+    } catch (err) {
+      // Captura o erro lançado pela função de login e exibe para o usuário
+      setError("Email ou senha incorretos.");
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -30,7 +50,6 @@ export default function Login() {
         <ScrollView contentContainerStyle={styles.scrollContainer}>
           <View style={styles.card}>
             <Text style={styles.title}>Notifica App</Text>
-
             <Text style={styles.description}>
               Bem-vindo de volta! Faça login para continuar.
             </Text>
@@ -55,10 +74,9 @@ export default function Login() {
               secureTextEntry
             />
 
-            <TouchableOpacity
-              style={styles.button}
-              onPress={() => login({ email, password })}
-            >
+            {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
+            <TouchableOpacity style={styles.button} onPress={handleLogin}>
               <Text style={styles.buttonText}>Entrar</Text>
             </TouchableOpacity>
 
@@ -157,5 +175,11 @@ const styles = StyleSheet.create({
     color: "#2109FF",
     fontSize: 14,
     fontWeight: "bold",
+  },
+  errorText: {
+    color: "red",
+    fontSize: 14,
+    textAlign: "center",
+    marginBottom: 10,
   },
 });

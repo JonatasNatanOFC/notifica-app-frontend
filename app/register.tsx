@@ -8,36 +8,61 @@ import {
   SafeAreaView,
   StatusBar,
   ScrollView,
-  KeyboardAvoidingView, // 1. IMPORTE AQUI
-  Platform, // Importe para verificar a plataforma (iOS/Android)
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { AuthContext } from "../context/AuthContext";
 import { useRouter } from "expo-router";
 
 export default function Register() {
-  const router = useRouter();
   const { register } = useContext(AuthContext);
+  const router = useRouter();
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [city, setCity] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState(""); // NOVO: Estado para a mensagem de erro
 
+  // NOVO: Lógica de validação completa
   const handleRegister = () => {
-    if (password !== confirmPassword) {
-      alert("As senhas não coincidem!");
+    setError(""); // Limpa qualquer erro anterior
+
+    if (username.trim() === "") {
+      setError("O nome de usuário não pode estar vazio.");
       return;
     }
+    if (email.trim() === "") {
+      setError("O email não pode estar vazio.");
+      return;
+    }
+    if (city.trim() === "") {
+      setError("A cidade não pode estar vazia.");
+      return;
+    }
+    if (password === "") {
+      setError("A senha não pode estar vazia.");
+      return;
+    }
+    if (confirmPassword === "") {
+      setError("A confirmação da senha não pode estar vazia.");
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError("As senhas não coincidem!");
+      return;
+    }
+
+    // Se a validação passar, chama a função de registro
     register({ username, email, password, city });
   };
 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#f0f0f0" />
-
       <KeyboardAvoidingView
         style={styles.avoidingView}
-        behavior={Platform.OS === "ios" ? "padding" : "height"} // Usa "padding" no iOS e "height" no Android
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
         <ScrollView contentContainerStyle={styles.scrollContainer}>
           <View style={styles.card}>
@@ -95,6 +120,9 @@ export default function Register() {
               secureTextEntry
             />
 
+            {/* NOVO: Exibe a mensagem de erro */}
+            {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
             <TouchableOpacity style={styles.button} onPress={handleRegister}>
               <Text style={styles.buttonText}>Cadastrar</Text>
             </TouchableOpacity>
@@ -117,7 +145,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#f0f0f0",
   },
-  // NOVO ESTILO PARA KeyboardAvoidingView
   avoidingView: {
     flex: 1,
   },
@@ -195,5 +222,12 @@ const styles = StyleSheet.create({
     color: "#2109FF",
     fontSize: 14,
     fontWeight: "bold",
+  },
+  // NOVO ESTILO
+  errorText: {
+    color: "red",
+    fontSize: 14,
+    textAlign: "center",
+    marginBottom: 10,
   },
 });
