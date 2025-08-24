@@ -4,7 +4,7 @@ import { View, Text, TextInput, Button, Image, StyleSheet, Alert } from 'react-n
 
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 
 import { ILocalizacao } from '../../interfaces/ILocalizacao';
 import { INotificacao } from '../../interfaces/INotificacao';
@@ -14,6 +14,8 @@ export default function CriarNotificacao() {
   const [fotoUrl, setFotoUrl] = useState('');
   const [localizacao, setLocalizacao] = useState<ILocalizacao | null>(null);
   const [userId, setUserId] = useState<string>('');
+  const [exibirBotaoLocalizacao, setExibirBotaoLocalizacao] = useState(false)
+  const { NotId } = useLocalSearchParams();
 
   //Carrega o ID do usuario no AsyncStorage
   //Como ainda n existe o usuario cadastrado, estamos simulando um ID
@@ -30,6 +32,27 @@ export default function CriarNotificacao() {
     };
     inicializarUserId();
   }, []);
+
+  const getNotificacao = async () => {    
+    const data = await AsyncStorage.getItem(`notificacoes_${userId}`)
+    const notificacoes: INotificacao[] = data ? JSON.parse(data) : [];
+    if (notificacoes){
+      const notificacao = notificacoes.filter(not => not.id === NotId)
+      setDescricao(notificacao[0].descricao)
+      setFotoUrl(notificacao[0].fotoUrl)
+      setLocalizacao(notificacao[0].localizacao)
+      
+    }
+  }
+ 
+  useEffect(() => {
+    if (NotId){
+      getNotificacao()
+      return
+    }
+    pegarLocalizacao()
+    
+  },[userId])
 
   const tirarFoto = async () => {
     const permission = await ImagePicker.requestCameraPermissionsAsync();
@@ -79,35 +102,50 @@ export default function CriarNotificacao() {
   const enviarNotificacao = async () => {
     if (!descricao || !fotoUrl || !localizacao) {
       Alert.alert('Preencha todos os campos!');
+      setExibirBotaoLocalizacao(true)
       return;
     }
-
-    const novaNotificacao: INotificacao = {
-      id: Date.now().toString(),
-      userId,
-      descricao,
-      fotoUrl,
-      localizacao,
-      dataEnvio: new Date().toISOString(),
-      status: 'pendente',
-    };
-
     const chave = `notificacoes_${userId}`;
-    const notificacoesAntigas = await AsyncStorage.getItem(chave);
-    const notificacoes: INotificacao[] = notificacoesAntigas ? JSON.parse(notificacoesAntigas) : [];
-    notificacoes.push(novaNotificacao);
-    await AsyncStorage.setItem(chave, JSON.stringify(notificacoes));
 
-    Alert.alert('Enviado com sucesso!');
+    if (NotId) {
+      const data = await AsyncStorage.getItem(`notificacoes_${userId}`)
+      const notificacoes: INotificacao[] = data ? JSON.parse(data) : [];
+      const notificacoesAtualizadas = notificacoes.map(not =>
+        not.id === NotId ? {
+          ...not,
+          fotoUrl,
+          descricao,
+        } : not
+      )
+
+      await AsyncStorage.setItem(chave, JSON.stringify(notificacoesAtualizadas));
+      Alert.alert('Edição realizada com sucesso!');
+    } else {
+      const novaNotificacao: INotificacao = {
+        id: Date.now().toString(),
+        userId,
+        descricao,
+        fotoUrl,
+        localizacao,
+        dataEnvio: new Date().toISOString(),
+        status: 'pendente',
+      };
+      const notificacoesAntigas = await AsyncStorage.getItem(chave);
+      const notificacoes: INotificacao[] = notificacoesAntigas ? JSON.parse(notificacoesAntigas) : [];
+      notificacoes.push(novaNotificacao);
+      await AsyncStorage.setItem(chave, JSON.stringify(notificacoes));
+      Alert.alert('Enviado com sucesso!');
+    }
+
     setDescricao('');
     setFotoUrl('');
     setLocalizacao(null);
-    router.replace('/(tabs)/notificacao');
+    router.back();
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.titulo}>Criar Notificação</Text>
+      <Text style={styles.titulo}>{NotId ? 'Editar Notificação' : 'Criar Notificação'}</Text>
 
       <TextInput
         style={styles.input}
@@ -117,7 +155,7 @@ export default function CriarNotificacao() {
         onChangeText={setDescricao}
       />
 
-      <Button title="Adicionar Foto" onPress={() => {
+      <Button title={fotoUrl ? 'Alterar Foto' : 'Adicionar Foto'} onPress={() => {
         Alert.alert(
           'Foto',
           'Como deseja adicionar a foto?',
@@ -130,7 +168,9 @@ export default function CriarNotificacao() {
       }} />
       {fotoUrl !== '' && <Image source={{ uri: fotoUrl }} style={styles.imagem} />}
 
-      <Button title="Usar Localização Atual" onPress={pegarLocalizacao} />
+      {exibirBotaoLocalizacao &&
+        <Button title="Usar Localização Atual" onPress={pegarLocalizacao} />
+      }
       {localizacao && (
         <Text style={styles.local}>
           📍 {localizacao.cidade} ({localizacao.latitude.toFixed(3)}, {localizacao.longitude.toFixed(3)})
@@ -138,8 +178,8 @@ export default function CriarNotificacao() {
       )}
 
       <View style={styles.botoes}>
-        <Button title="Enviar" onPress={enviarNotificacao} />
-        <Button title="Cancelar" onPress={() => {router.replace("../notificacao")}} color="#777" />
+        <Button title={NotId ? 'Salvar' : 'Enviar'} onPress={enviarNotificacao} />
+        <Button title="Cancelar" onPress={() => {router.back()}} color="#777" />
       </View>
     </View>
   );

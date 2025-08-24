@@ -5,6 +5,8 @@ import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
 import { INotificacao } from "@/interfaces/INotificacao";
 import { ILocalizacao } from "@/interfaces/ILocalizacao";
 import ModalConfirmacao from "./hooks/ModalConfirmacao";
+import { router } from "expo-router";
+import { setParams } from "expo-router/build/global-state/routing";
 
 type cardProps = {
   notificacao: INotificacao;
@@ -89,6 +91,10 @@ export default function NotificationCard({
     }
   };
 
+  const handleEdit = () => {
+    router.push({ pathname: '/screens/criarNotificacao', params: { NotId: id } })
+  }
+
   const alterarStatus = (novoStatus: 'pendente' | 'resolvido' | 'análise') => {
     if (onAtualizarStatus) onAtualizarStatus(notificacao.id, novoStatus);
     setStatusMenuVisible(false);
@@ -142,11 +148,17 @@ export default function NotificationCard({
           <MaterialIcons name="map" size={18} color="#444" />
           <Text style={styles.actionText}>Ver no mapa</Text>
         </TouchableOpacity>
-        {!exibirBotoesGerenciamento && (
-          <TouchableOpacity style={styles.actionButton} onPress={() => setModalVisible(true)}>
-            <MaterialIcons name="delete" size={18} color="#f00" />
-            <Text style={styles.actionText}>Excluir</Text>
-          </TouchableOpacity>
+        {!exibirBotoesGerenciamento && notificacao.status === "pendente" && (
+          <>
+            <TouchableOpacity style={styles.actionButton} onPress={() => setModalVisible(true)}>
+              <MaterialIcons name="delete" size={18} color="#f00" />
+              <Text style={styles.actionText}> Excluir </Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.actionButton} onPress={() => handleEdit()}>
+              <MaterialIcons name="edit" size={18} color="#303f9f" />
+              <Text style={styles.actionText}> Editar </Text>
+            </TouchableOpacity>
+          </>
         )}
         {exibirBotoesGerenciamento && (
           <>
