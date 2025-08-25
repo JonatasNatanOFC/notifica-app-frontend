@@ -7,7 +7,7 @@ export interface INotificacao {
   fotoUrl: string;
   localizacao: ILocalizacao;
   dataEnvio: string;
-  status: 'pendente' | 'resolvido';
+  status: 'pendente' | 'resolvido' | 'análise';
   respostaPrefeitura?: string;
 }
 
