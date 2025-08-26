@@ -28,7 +28,13 @@ export default function AuthProvider({
   const [userData, setUserData] = useState<any>(null);
   const [token, setToken] = useState<string | null>(null);
   const router = useRouter();
-  const IPs = ["localhost", "10.10.187.67", "192.168.0.131", "10.0.2.129"];
+  const IPs = [
+    "localhost",
+    "10.10.187.67",
+    "192.168.0.131",
+    "10.0.2.129",
+    "192.168.0.160",
+  ];
 
   useEffect(() => {
     const loadUser = async () => {

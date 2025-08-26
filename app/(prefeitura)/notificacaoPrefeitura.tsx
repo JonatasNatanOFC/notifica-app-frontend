@@ -1,5 +1,13 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { ScrollView, Text, StyleSheet, ActivityIndicator, Linking, View, TouchableOpacity } from "react-native";
+import {
+  ScrollView,
+  Text,
+  StyleSheet,
+  ActivityIndicator,
+  Linking,
+  View,
+  TouchableOpacity,
+} from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import DropDownPicker from "react-native-dropdown-picker";
 
@@ -41,7 +49,10 @@ export default function notificacaoPrefeitura() {
     carregarNotificacoes();
   }, []);
 
-  const atualizarStatus = async (notificacaoId: string, novoStatus: "pendente" | "resolvido" | "análise") => {
+  const atualizarStatus = async (
+    notificacaoId: string,
+    novoStatus: "pendente" | "resolvido" | "análise"
+  ) => {
     try {
       const notificacoesAtualizadas = notificacoes.map((not) =>
         not.id === notificacaoId ? { ...not, status: novoStatus } : not
@@ -73,7 +84,9 @@ export default function notificacaoPrefeitura() {
     (not) =>
       (cidade === "" ||
         (not.localizacao?.cidade &&
-          not.localizacao.cidade.toLowerCase().includes(cidade.toLowerCase()))) &&
+          not.localizacao.cidade
+            .toLowerCase()
+            .includes(cidade.toLowerCase()))) &&
       (filterStatus === "Tudo" || not.status === filterStatus)
   );
 
@@ -119,7 +132,12 @@ export default function notificacaoPrefeitura() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#fff" },
-  noNots: { paddingVertical: 30, textAlign: "center", fontSize: 20, fontWeight: "bold" },
+  noNots: {
+    paddingVertical: 30,
+    textAlign: "center",
+    fontSize: 20,
+    fontWeight: "bold",
+  },
   dropdownRow: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -132,5 +150,4 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
   },
-
 });
