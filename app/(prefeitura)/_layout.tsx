@@ -7,6 +7,7 @@ import {
   DrawerContentScrollView,
   DrawerItemList,
 } from "@react-navigation/drawer";
+import { router } from "expo-router";
 
 export default function PrefeituraTabs() {
   const { userData } = useContext(AuthContext);
@@ -33,7 +34,7 @@ export default function PrefeituraTabs() {
 
         <TouchableOpacity
           style={styles.profileContainer}
-          onPress={() => console.log(userData)}
+          onPress={() => {router.push('/screens/profile')}}
         >
           <View style={styles.iconCircle}>
             <Ionicons name="person-outline" size={24} />
