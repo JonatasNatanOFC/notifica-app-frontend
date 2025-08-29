@@ -1,7 +1,7 @@
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
-import { Stack, Redirect } from 'expo-router';
+import { Stack, Redirect, router } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect, useContext } from 'react';
 import 'react-native-reanimated';
@@ -48,16 +48,19 @@ export default function RootLayout() {
 
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
-  const { user } = useContext(AuthContext);
+  const { userData } = useContext(AuthContext);
 
   // 🔹 Redireciona de acordo com login
-  if (user?.role === 'USER') {
-    return <Redirect href="/(user)/minhasNotificacoes" />;
-  }
-
-  if (user?.role === 'PREFECTURE') {
-    return <Redirect href="/(prefeitura)/notificacaoPrefeitura" />;
-  }
+  useEffect(() => {
+    if (userData?.role === 'USER') {
+      router.push('/(user)/minhasNotificacoes')
+    }
+  
+    if (userData?.role === 'PREFECTURE') {
+      console.log(userData);
+      router.push('/(prefeitura)/notificacaoPrefeitura')
+    }
+  },[userData])
 
   // 🔹 Caso não esteja logado → libera telas públicas
   return (

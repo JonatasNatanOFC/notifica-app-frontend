@@ -15,6 +15,8 @@ import { INotificacao } from "../../interfaces/INotificacao";
 import NotificationCard from "@/components/CardNotificacao";
 import { router } from "expo-router";
 
+import { gerarRelatorioPDF } from "@/components/hooks/GerarRelatorio";
+
 export default function notificacaoPrefeitura() {
   const [cidade, setCidade] = useState("");
   const [notificacoes, setNotificacoes] = useState<INotificacao[]>([]);
@@ -126,6 +128,10 @@ export default function notificacaoPrefeitura() {
           <Text style={styles.noNots}>Nenhuma notificação encontrada.</Text>
         )}
       </ScrollView>
+
+      <TouchableOpacity style={styles.fab} onPress={() => {gerarRelatorioPDF(notificacoes)}}>
+        <Text style={styles.fabText}>Gerar Relatório</Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -150,4 +156,23 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
   },
+  fab: {
+  position: "absolute",
+  paddingVertical: 10,
+  paddingHorizontal: 20,
+  backgroundColor: "blue",
+  borderRadius: 30,
+  right: 20,
+  bottom: 20,
+  elevation: 8,
+  shadowColor: "#000",
+  shadowOpacity: 0.3,
+  shadowRadius: 4,
+  shadowOffset: { width: 1, height: 2 },
+},
+
+fabText: {
+  color: "#fff",
+  fontWeight: "bold",
+},
 });

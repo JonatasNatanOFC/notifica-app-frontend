@@ -29,11 +29,12 @@ export default function AuthProvider({
   const [token, setToken] = useState<string | null>(null);
   const router = useRouter();
   const IPs = [
-    "localhost",
-    "10.10.187.67",
-    "192.168.0.131",
-    "10.0.2.129",
-    "192.168.0.160",
+    "localhost", 
+    "10.10.187.67", 
+    "192.168.0.131", 
+    "10.0.2.129", 
+    "10.10.186.57", 
+    "192.168.0.160"
   ];
 
   useEffect(() => {
@@ -41,6 +42,7 @@ export default function AuthProvider({
       try {
         const storedToken = await AsyncStorage.getItem("token");
         const storedUser = await AsyncStorage.getItem("user");
+        
         if (storedToken && storedUser) {
           setToken(storedToken);
           try {
@@ -60,7 +62,7 @@ export default function AuthProvider({
   const login = async (values: { email: string; password: string }) => {
     try {
       const response = await axios.post(
-        `http://${IPs[3]}:8080/auth/login`,
+        `http://${IPs[2]}:8080/auth/login`,
         values
       );
       const { token, user } = response.data;
