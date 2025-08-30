@@ -16,12 +16,12 @@ import { FontAwesome } from "@expo/vector-icons";
 import { INotificacao } from "../../interfaces/INotificacao";
 import CardNotificacao from "@/components/CardNotificacao";
 import ApagarNotificacao from "@/components/hooks/ApagarNotificacao";
-import ModalCriarNotificacao from "@/components/ModalCriarNotificacao"; // 1. Importe o novo modal
+import ModalCriarNotificacao from "@/components/ModalCriarNotificacao";
 
 export default function MinhasNotificacoes() {
   const [notificacoes, setNotificacoes] = useState<INotificacao[]>([]);
   const [carregando, setCarregando] = useState(true);
-  const [isModalVisible, setModalVisible] = useState(false); // 2. Estado para controlar o modal
+  const [isModalVisible, setModalVisible] = useState(false);
 
   const carregarNotificacoes = async () => {
     if (!carregando) setCarregando(true);
@@ -80,6 +80,7 @@ export default function MinhasNotificacoes() {
               abrirNoMapa={abrirNoMapa}
               id={Number(not.id)}
               onDelete={onDelete}
+              carregarNotificacoes={carregarNotificacoes}
             />
           ))
         ) : (
@@ -89,18 +90,20 @@ export default function MinhasNotificacoes() {
 
       <TouchableOpacity
         style={styles.fab}
-        onPress={() => setModalVisible(true)} // 3. O botão agora abre o modal
+        onPress={() => setModalVisible(true)}
       >
         <FontAwesome name="plus" size={22} color="#fff" />
       </TouchableOpacity>
 
-      {/* 4. Renderize o modal aqui */}
       <ModalCriarNotificacao
         visible={isModalVisible}
-        onClose={() => setModalVisible(false)}
+        onClose={() => {
+          setModalVisible(false);
+          carregarNotificacoes();
+        }}
         onSave={() => {
           setModalVisible(false);
-          carregarNotificacoes(); // Recarrega a lista após salvar
+          carregarNotificacoes();
         }}
       />
     </View>

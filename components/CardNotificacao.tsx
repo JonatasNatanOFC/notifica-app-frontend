@@ -4,15 +4,14 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
-  Modal,
-  Pressable,
+  View
 } from "react-native";
 import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
 import { INotificacao } from "@/interfaces/INotificacao";
 import { ILocalizacao } from "@/interfaces/ILocalizacao";
 import ModalConfirmacao from "./hooks/ModalConfirmacao";
 import { router } from "expo-router";
+import ModalCriarNotificacao from "./ModalCriarNotificacao";
 
 type cardProps = {
   notificacao: INotificacao;
@@ -20,11 +19,9 @@ type cardProps = {
   abrirNoMapa: (latitude: number, longitude: number) => void;
   id?: number;
   onDelete?: (id: number) => void;
-  onAtualizarStatus?: (
-    id: string,
-    novoStatus: "pendente" | "resolvido" | "análise"
-  ) => void;
+  onAtualizarStatus?: () => void;
   onResponder?: () => void;
+  carregarNotificacoes?: () => void;
 };
 
 export type StatusColorProps = {
@@ -80,14 +77,16 @@ export default function NotificationCard({
   onDelete,
   onAtualizarStatus,
   onResponder,
+  carregarNotificacoes
 }: cardProps) {
   const colors = statusColors[notificacao.status.toLowerCase()] || {
     backgroundColor: "#eee",
     textColor: "#333",
   };
-  const [modalVisible, setModalVisible] = useState(false);
+  const [confirmModalVisible, setConfirmModalVisible] = useState(false);
   const [mostrarDetalhes, setMostrarDetalhes] = useState(false);
-  const [statusMenuVisible, setStatusMenuVisible] = useState(false);
+
+  const [createModalVisible, setCreateModalVisible] = useState(false);
 
   const handleDelete = () => {
     if (id && onDelete) {
@@ -97,18 +96,12 @@ export default function NotificationCard({
 
   const handleEdit = () => {
     if (id) {
-      router.push({
-        pathname: "/screens/criarNotificacao",
-        params: { NotId: id },
-      });
+      setCreateModalVisible(true)
     }
   };
 
-  const alterarStatus = (novoStatus: "pendente" | "resolvido" | "análise") => {
-    if (onAtualizarStatus) {
-      onAtualizarStatus(notificacao.id, novoStatus);
-    }
-    setStatusMenuVisible(false);
+  const isImageUri = (uri: string) => {
+    return uri.match(/\.(jpeg|jpg|gif|png)$/) != null;
   };
 
   return (
@@ -130,7 +123,7 @@ export default function NotificationCard({
         )}
         <View style={styles.textContent}>
           <Text style={styles.description}>{notificacao.descricao}</Text>
-          <Text style={styles.user}>Usuário: {notificacao.userId}</Text>
+          <Text style={styles.user}>Usuário: {notificacao.username ? notificacao.username : notificacao.userId}</Text>
           <View
             style={[
               styles.statusContainer,
@@ -162,19 +155,19 @@ export default function NotificationCard({
           <>
             <TouchableOpacity
               style={styles.actionButton}
-              onPress={() => setModalVisible(true)}
+              onPress={() => setConfirmModalVisible(true)}
             >
               <MaterialIcons name="delete" size={18} color="#d32f2f" />
               <Text style={styles.actionText}>Excluir</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.actionButton} onPress={handleEdit}>
+            <TouchableOpacity style={styles.actionButton} onPress={() => {handleEdit()}}>
               <MaterialIcons name="edit" size={18} color="#303f9f" />
               <Text style={styles.actionText}>Editar</Text>
             </TouchableOpacity>
           </>
         )}
 
-        {exibirBotoesGerenciamento && (
+        {exibirBotoesGerenciamento && notificacao.status != "resolvido" && (
           <>
             {onResponder && !notificacao.respostaPrefeitura && (
               <TouchableOpacity
@@ -185,7 +178,18 @@ export default function NotificationCard({
                 <Text style={styles.actionText}>Responder</Text>
               </TouchableOpacity>
             )}
-            {notificacao.respostaPrefeitura && (
+            {onAtualizarStatus && (
+              <TouchableOpacity
+                style={styles.actionButton}
+                onPress={() => onAtualizarStatus()}
+              >
+                <MaterialIcons name="update" size={18} color="#444" />
+                <Text style={styles.actionText}>Alterar status</Text>
+              </TouchableOpacity>
+            )}
+          </>
+        )}
+        {notificacao.respostaPrefeitura && (
               <TouchableOpacity
                 style={styles.actionButton}
                 onPress={() => setMostrarDetalhes((prev) => !prev)}
@@ -196,63 +200,43 @@ export default function NotificationCard({
                 </Text>
               </TouchableOpacity>
             )}
-            {onAtualizarStatus && (
-              <TouchableOpacity
-                style={styles.actionButton}
-                onPress={() => setStatusMenuVisible(true)}
-              >
-                <MaterialIcons name="update" size={18} color="#444" />
-                <Text style={styles.actionText}>Alterar status</Text>
-              </TouchableOpacity>
-            )}
-          </>
-        )}
       </View>
 
-      <Modal
-        transparent
-        visible={statusMenuVisible}
-        animationType="fade"
-        onRequestClose={() => setStatusMenuVisible(false)}
-      >
-        <Pressable
-          style={styles.modalOverlay}
-          onPress={() => setStatusMenuVisible(false)}
-        >
-          <View style={styles.modalContent}>
-            {["pendente", "análise", "resolvido"].map((status) => (
-              <TouchableOpacity
-                key={status}
-                style={styles.modalButton}
-                onPress={() =>
-                  alterarStatus(status as "pendente" | "resolvido" | "análise")
-                }
-              >
-                <Text style={styles.modalButtonText}>
-                  {status.charAt(0).toUpperCase() + status.slice(1)}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </Pressable>
-      </Modal>
-
       <ModalConfirmacao
-        visible={modalVisible}
+        visible={confirmModalVisible}
         message="Deseja realmente excluir esta notificação?"
         onConfirm={() => {
           handleDelete();
-          setModalVisible(false);
+          setConfirmModalVisible(false);
         }}
-        onCancel={() => setModalVisible(false)}
+        onCancel={() => setConfirmModalVisible(false)}
+      />
+
+
+      <ModalCriarNotificacao
+        visible={createModalVisible}
+        id={id}
+        onClose={() => setCreateModalVisible(false)}
+        onSave={() => {
+          setCreateModalVisible(false);
+          if(carregarNotificacoes) carregarNotificacoes()
+        }}
       />
 
       {mostrarDetalhes && notificacao.respostaPrefeitura && (
         <View style={styles.respostaContainer}>
           <Text style={styles.respostaTitulo}>Resposta da Prefeitura:</Text>
-          <Text style={styles.respostaTexto}>
-            {notificacao.respostaPrefeitura}
-          </Text>
+          {isImageUri(notificacao.respostaPrefeitura) ? (
+            <Image 
+              source={{ uri: notificacao.respostaPrefeitura }} 
+              style={styles.imagemResposta} 
+              resizeMode="contain"
+            />
+          ) : (
+            <Text style={styles.respostaTexto}>
+              {notificacao.respostaPrefeitura}
+            </Text>
+          )}
         </View>
       )}
     </View>
@@ -367,6 +351,12 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: "#333",
     lineHeight: 18,
+  },
+  imagemResposta: {
+    width: '100%',
+    height: 200,
+    borderRadius: 8,
+    marginTop: 10,
   },
   modalOverlay: {
     flex: 1,

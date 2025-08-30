@@ -13,7 +13,7 @@ import DropDownPicker from "react-native-dropdown-picker";
 
 import { INotificacao } from "../../interfaces/INotificacao";
 import NotificationCard from "@/components/CardNotificacao";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 
 import { gerarRelatorioPDF } from "@/components/hooks/GerarRelatorio";
 
@@ -31,47 +31,27 @@ export default function notificacaoPrefeitura() {
     { label: "Resolvido", value: "resolvido" },
   ]);
 
-  useEffect(() => {
-    const carregarNotificacoes = async () => {
-      try {
-        const userId = await AsyncStorage.getItem("userId");
-        if (!userId) return;
-
-        const dados = await AsyncStorage.getItem(`notificacoes_${userId}`);
-        const lista: INotificacao[] = dados ? JSON.parse(dados) : [];
-
-        setNotificacoes(lista.reverse());
-      } catch (error) {
-        console.error("Erro ao carregar notificações:", error);
-      } finally {
-        setCarregando(false);
-      }
-    };
-
-    carregarNotificacoes();
-  }, []);
-
-  const atualizarStatus = async (
-    notificacaoId: string,
-    novoStatus: "pendente" | "resolvido" | "análise"
-  ) => {
-    try {
-      const notificacoesAtualizadas = notificacoes.map((not) =>
-        not.id === notificacaoId ? { ...not, status: novoStatus } : not
-      );
-      setNotificacoes(notificacoesAtualizadas);
-
-      const userId = await AsyncStorage.getItem("userId");
-      if (userId) {
-        await AsyncStorage.setItem(
-          `notificacoes_${userId}`,
-          JSON.stringify(notificacoesAtualizadas.reverse())
-        );
-      }
-    } catch (error) {
-      console.error("Erro ao atualizar status:", error);
-    }
-  };
+  useFocusEffect(
+    useCallback(() => {
+      const carregarNotificacoes = async () => {
+        try {
+          const userId = await AsyncStorage.getItem("userId");
+          if (!userId) return;
+  
+          const dados = await AsyncStorage.getItem(`notificacoes_${userId}`);
+          const lista: INotificacao[] = dados ? JSON.parse(dados) : [];
+  
+          setNotificacoes(lista.reverse());
+        } catch (error) {
+          console.error("Erro ao carregar notificações:", error);
+        } finally {
+          setCarregando(false);
+        }
+      };
+  
+      carregarNotificacoes();
+    },[])
+  )
 
   const abrirNoMapa = (latitude: number, longitude: number) => {
     const url = `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`;
@@ -79,7 +59,11 @@ export default function notificacaoPrefeitura() {
   };
 
   const responderNotificacao = (notificacaoId: string) => {
-    router.push(`/screens/responderNotificacao?id=${notificacaoId}`);
+    router.push(`/screens/responderNotificacao?id=${notificacaoId}&acao=responder`);
+  };
+
+  const alterarStatus = (notificacaoId: string) => {
+    router.push(`/screens/responderNotificacao?id=${notificacaoId}&acao=status`);
   };
 
   const notificacoesFiltradas = notificacoes.filter(
@@ -120,7 +104,7 @@ export default function notificacaoPrefeitura() {
               notificacao={not}
               exibirBotoesGerenciamento={true}
               abrirNoMapa={abrirNoMapa}
-              onAtualizarStatus={atualizarStatus}
+              onAtualizarStatus={() => alterarStatus(not.id)}
               onResponder={() => responderNotificacao(not.id)}
             />
           ))

@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, Image, StyleSheet, TextInput, Button, Alert, ScrollView } from "react-native";
+import { View, Text, Image, StyleSheet, TextInput, Button, Alert, ScrollView, TouchableOpacity } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useLocalSearchParams, router } from "expo-router";
 
 import { INotificacao } from "../../interfaces/INotificacao";
+import * as ImagePicker from "expo-image-picker";
+import { FontAwesome } from "@expo/vector-icons";
 
 export default function ResponderNotificacao() {
-  const { id } = useLocalSearchParams();
+  const { id, acao } = useLocalSearchParams();
   const [notificacao, setNotificacao] = useState<INotificacao | null>(null);
   const [resposta, setResposta] = useState("");
+  const [status, setStatus] = useState("Pendente");
 
   useEffect(() => {
     const carregarNotificacao = async () => {
@@ -23,6 +26,7 @@ export default function ResponderNotificacao() {
         if (encontrada) {
           setNotificacao(encontrada);
           setResposta(encontrada.respostaPrefeitura || "");
+          setStatus(encontrada.status || "Pendente");
         }
       } catch (error) {
         console.error("Erro ao carregar notificação:", error);
@@ -38,6 +42,12 @@ export default function ResponderNotificacao() {
       Alert.alert("Erro", "A resposta não pode estar vazia ou conter apenas espaços.");
       return;
     }
+
+    if (status === "resolvido" && !resposta) {
+      Alert.alert("Erro", "Você precisa adicionar uma foto ao marcar como 'resolvido'.");
+      return;
+    }
+
     try {
       const userId = await AsyncStorage.getItem("userId");
       if (!userId) return;
@@ -47,16 +57,38 @@ export default function ResponderNotificacao() {
 
       const atualizada = lista.map((n) =>
         n.id === notificacao.id
-          ? { ...n, respostaPrefeitura: resposta, status: "respondido" }
+          ? { ...n, respostaPrefeitura: resposta, status: status }
           : n
       );
 
       await AsyncStorage.setItem(`notificacoes_${userId}`, JSON.stringify(atualizada));
 
-      Alert.alert("Resposta salva com sucesso!");
-      router.replace("/(tabs)/notificacao"); // voltar à lista de notificações
+      Alert.alert(status == "responder" ? "Resposta salva com sucesso!" : "Status alterado com sucesso!");
+      router.back();
     } catch (error) {
       console.error("Erro ao salvar resposta:", error);
+    }
+  };
+
+  const tirarFoto = async () => {
+    const permission = await ImagePicker.requestCameraPermissionsAsync();
+    if (!permission.granted) {
+      Alert.alert("Permissão negada", "Precisamos de acesso à câmera.");
+      return;
+    }
+    const result = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      quality: 0.7,
+    });
+    if (!result.canceled) {
+      setResposta(result.assets[0].uri);
+    }
+  };
+
+  const escolherFoto = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({});
+    if (!result.canceled) {
+      setResposta(result.assets[0].uri);
     }
   };
 
@@ -70,7 +102,7 @@ export default function ResponderNotificacao() {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.titulo}>Responder Notificação</Text>
+      <Text style={styles.titulo}>{acao == 'status' ? 'Alterar Status' : 'Responder Notificação'}</Text>
 
       <Text style={styles.label}>Descrição:</Text>
       <Text style={styles.texto}>{notificacao.descricao}</Text>
@@ -87,18 +119,60 @@ export default function ResponderNotificacao() {
       <Text style={styles.label}>Data:</Text>
       <Text style={styles.texto}>{new Date(notificacao.dataEnvio).toLocaleString()}</Text>
 
-      <Text style={styles.label}>Resposta:</Text>
-      <TextInput
-        style={styles.textarea}
-        placeholder="Digite aqui sua resposta..."
-        value={resposta}
-        onChangeText={setResposta}
-        multiline
-        numberOfLines={5}
-      />
+      {acao == 'responder' ?
+        <>
+          <Text style={styles.label}>Resposta:</Text>
+          <TextInput
+            style={styles.textarea}
+            placeholder="Digite aqui sua resposta..."
+            value={resposta}
+            onChangeText={setResposta}
+            multiline
+            numberOfLines={5}
+          />
+        </>
+        :
+        <>
+          <Text style={styles.label}>Status:</Text>
+          <View style={styles.statusButtons}>
+            {["análise", "resolvido"].map((option) => (
+              <TouchableOpacity
+              key={option}
+              onPress={() => setStatus(option)}
+              style={[styles.statusButton, status === option && styles.selectedStatus]}>
+              <Text style={styles.statusButtonText}>{option}</Text>
+            </TouchableOpacity>
+            ))}
+          </View>
+
+          {status === "resolvido" && (
+            <TouchableOpacity
+              style={styles.imagePicker}
+              onPress={() => {
+                Alert.alert("Adicionar Foto", "Escolha uma opção", [
+                  { text: "Tirar Foto", onPress: tirarFoto },
+                  { text: "Escolher da Galeria", onPress: escolherFoto },
+                  { text: "Cancelar", style: "cancel" },
+                ]);
+              }}
+            >
+              {resposta ? (
+                <Image source={{ uri: resposta }} style={styles.imagem} />
+              ) : (
+                <View style={styles.imagePlaceholder}>
+                  <FontAwesome name="camera" size={40} color="#ccc" />
+                  <Text style={styles.imagePlaceholderText}>
+                    Toque para adicionar uma foto
+                  </Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          )}
+        </>
+      }
 
       <View style={styles.botoes}>
-        <Button title="Salvar Resposta" onPress={salvarResposta} />
+        <Button title={acao == "responder" ? "Salvar Resposta" : "Alterar Status"} onPress={salvarResposta} />
         <Button title="Cancelar" color="#999" onPress={() => router.back()} />
       </View>
     </ScrollView>
@@ -123,5 +197,41 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
   },
+  statusButtons: {
+    flexDirection: "row",
+    justifyContent: "center",
+    marginBottom: 20,
+  },
+  statusButton: {
+    marginHorizontal: 10,
+    padding: 10,
+    borderWidth: 1,
+    borderRadius: 5,
+    backgroundColor: "#f0f0f0",
+  },
+  selectedStatus: {
+    backgroundColor: "#007BFF",
+  },
+  statusButtonText: {
+    color: "#000",
+    fontWeight: "bold",
+  },
   loading: { marginTop: 50, textAlign: "center", fontSize: 18 },
+  imagePicker: {
+    width: "100%",
+    height: 200,
+    borderRadius: 10,
+    backgroundColor: "#f0f0f0",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 15,
+    overflow: "hidden",
+  },
+  imagePlaceholder: {
+    alignItems: "center",
+  },
+  imagePlaceholderText: {
+    color: "#aaa",
+    marginTop: 10,
+  },
 });

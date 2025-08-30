@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   View,
@@ -18,15 +18,18 @@ import { FontAwesome } from "@expo/vector-icons";
 
 import { ILocalizacao } from "@/interfaces/ILocalizacao";
 import { INotificacao } from "@/interfaces/INotificacao";
+import { AuthContext } from "@/context/AuthContext";
 
 type ModalProps = {
   visible: boolean;
+  id?: number;
   onClose: () => void;
   onSave: () => void;
 };
 
 export default function ModalCriarNotificacao({
   visible,
+  id,
   onClose,
   onSave,
 }: ModalProps) {
@@ -34,7 +37,37 @@ export default function ModalCriarNotificacao({
   const [fotoUrl, setFotoUrl] = useState("");
   const [localizacao, setLocalizacao] = useState<ILocalizacao | null>(null);
   const [userId, setUserId] = useState<string>("");
+  const { userData } = useContext(AuthContext);
 
+  
+  useEffect(() => {
+    if (visible && userId && id) {
+      loadNotData(id);
+    } else {
+      resetForm();
+    }
+  }, [visible, userId, id]);
+
+  const loadNotData = async (notId: number) => {
+    const chave = `notificacoes_${userId}`;
+    try {
+      const data = await AsyncStorage.getItem(chave);
+      const notList: INotificacao[] = data ? JSON.parse(data) : [];
+
+      
+      const notData = notList.find((not) => not.id === notId.toString());
+
+      if (notData) {
+        setDescricao(notData.descricao);
+        setFotoUrl(notData.fotoUrl);
+        setLocalizacao(notData.localizacao);
+      }
+    } catch (error) {
+      console.error("Erro ao carregar dados", error);
+    }
+  };
+
+  
   useEffect(() => {
     if (visible) {
       const inicializarUserId = async () => {
@@ -49,8 +82,6 @@ export default function ModalCriarNotificacao({
       };
       inicializarUserId();
       pegarLocalizacao();
-    } else {
-      resetForm();
     }
   }, [visible]);
 
@@ -107,6 +138,7 @@ export default function ModalCriarNotificacao({
     const chave = `notificacoes_${userId}`;
     const novaNotificacao: INotificacao = {
       id: Date.now().toString(),
+      username: userData.username,
       userId,
       descricao,
       fotoUrl,
@@ -114,14 +146,23 @@ export default function ModalCriarNotificacao({
       dataEnvio: new Date().toISOString(),
       status: "pendente",
     };
+
     const notificacoesAntigas = await AsyncStorage.getItem(chave);
     const notificacoes: INotificacao[] = notificacoesAntigas
       ? JSON.parse(notificacoesAntigas)
       : [];
-    notificacoes.push(novaNotificacao);
-    await AsyncStorage.setItem(chave, JSON.stringify(notificacoes));
 
-    Alert.alert("Sucesso!", "Sua notificação foi enviada.");
+    if (id) {
+      const index = notificacoes.findIndex((not) => not.id === id.toString());
+      if (index !== -1) {
+        notificacoes[index] = { ...notificacoes[index], ...novaNotificacao };
+      }
+    } else {
+      notificacoes.push(novaNotificacao);
+    }
+
+    await AsyncStorage.setItem(chave, JSON.stringify(notificacoes));
+    Alert.alert("Sucesso!", id ? "Notificação atualizada." : "Notificação enviada.");
     onSave();
   };
 
@@ -136,7 +177,9 @@ export default function ModalCriarNotificacao({
         <View style={styles.modalContainer}>
           <ScrollView>
             <View style={styles.modalHeader}>
-              <Text style={styles.titulo}>Criar Notificação</Text>
+              <Text style={styles.titulo}>
+                {id ? "Editar Notificação" : "Criar Notificação"}
+              </Text>
               <TouchableOpacity onPress={onClose}>
                 <FontAwesome name="close" size={24} color="#666" />
               </TouchableOpacity>
@@ -177,7 +220,7 @@ export default function ModalCriarNotificacao({
               </Text>
             )}
             <View style={styles.botoes}>
-              <Button title="Enviar Notificação" onPress={enviarNotificacao} />
+              <Button title={id ? "Atualizar Notificação" : "Enviar Notificação"} onPress={enviarNotificacao} />
             </View>
           </ScrollView>
         </View>

@@ -3,6 +3,7 @@ import { ILocalizacao } from "./ILocalizacao";
 export interface INotificacao {
   id: string;
   userId: string;
+  username?: string;
   descricao: string;
   fotoUrl: string;
   localizacao: ILocalizacao;
